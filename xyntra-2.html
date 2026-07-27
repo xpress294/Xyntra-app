@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Xyntra</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#1a2247" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231a2247'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%23ff6b35' font-family='Arial' font-weight='bold'%3EY%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- ============ FIREBASE (proyecto "xyntra-sv") ============
+     Clientes, Empleados y Guías se guardan de verdad en Firestore y se
+     sincronizan en vivo entre dispositivos que abran este mismo archivo. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC2jJpSvd2H6MSiKvITMRt9xvisnMZzqLo",
+    authDomain: "xyntra-sv.firebaseapp.com",
+    projectId: "xyntra-sv",
+    storageBucket: "xyntra-sv.firebasestorage.app",
+    messagingSenderId: "120979023981",
+    appId: "1:120979023981:web:1aa4cd92c75321a30c7764",
+    measurementId: "G-PVSZQ9NE2E"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const dbFirestore = firebase.firestore();
+</script>
+
+<style>
+  :root{
+    --navy:#1a2247; --orange:#ff6b35; --gray:#6b7280; --bg:#f3f4f8;
+    --card:#ffffff; --border:#e2e5ee; --green:#16a34a; --red:#b91c1c; --amber:#b45309;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Inter',Arial,sans-serif;background:var(--bg);color:#1f2430;}
+  #app{display:flex;min-height:100vh;}
+  input,select,textarea,button{font-family:inherit;font-size:14px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--gray);margin-bottom:4px;font-weight:600;}
+  .field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;}
+  .btn{border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;}
+  .btn-navy{background:var(--navy);color:#fff;}
+  .btn-orange{background:var(--orange);color:#fff;}
+  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--navy);}
+  .btn-outline:hover,.btn-navy:hover,.btn-orange:hover{filter:brightness(1.08);}
+  .btn-link{background:none;border:none;color:var(--navy);text-decoration:underline;cursor:pointer;padding:0;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:18px;}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+  .page-header h1{margin:0;font-size:22px;}
+  .page-header p{margin:2px 0 0 0;color:var(--gray);font-size:13px;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--border);font-size:13px;}
+  th{color:var(--gray);font-weight:600;text-transform:uppercase;font-size:11px;}
+  .chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#eef1f8;color:var(--navy);}
+  .chip-green{background:#dcfce7;color:var(--green);}
+  .chip-amber{background:#fef3c7;color:var(--amber);}
+  .chip-red{background:#fee2e2;color:var(--red);}
+  .hint{color:var(--gray);font-size:12px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+  @media (max-width:700px){.grid2{grid-template-columns:1fr;}}
+
+  /* Login */
+  .login-screen{min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--navy),#0e1330);}
+  .login-box{width:340px;max-width:90vw;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:32px;color:#fff;}
+  .login-title h1{margin:0 0 4px 0;font-size:22px;letter-spacing:.5px;}
+  .login-title p{margin:0 0 20px 0;color:rgba(255,255,255,.7);font-size:13px;}
+  .login-box .field label{color:rgba(255,255,255,.8);}
+  .login-box .field input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);color:#fff;}
+  .login-logo{text-align:center;margin-bottom:10px;font-size:36px;font-weight:800;color:var(--orange);}
+
+  /* Sidebar / layout */
+  .sidebar{width:230px;flex-shrink:0;background:var(--navy);color:#fff;display:flex;flex-direction:column;padding:16px 12px;}
+  .sidebar-logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;padding:6px 8px 16px 8px;}
+  .sidebar-logo .box{color:var(--orange);}
+  .session-box{background:rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;}
+  .session-box strong{display:block;font-size:13px;margin-top:2px;}
+  .nav{flex:1;overflow-y:auto;}
+  .nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:rgba(255,255,255,.85);padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;margin-bottom:2px;}
+  .nav-btn:hover{background:rgba(255,255,255,.08);}
+  .nav-btn.active{background:var(--orange);color:#fff;}
+  .logout-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:none;color:#fff;padding:10px;border-radius:8px;cursor:pointer;margin-top:10px;}
+  .sidebar-overlay{display:none;}
+  main{flex:1;min-width:0;}
+  .main-content{padding:24px;max-width:1100px;margin:0 auto;}
+  .mobile-topbar{display:none;}
+
+  @media (max-width:900px){
+    .sidebar{position:fixed;left:-250px;top:0;bottom:0;z-index:20;transition:left .2s;}
+    .sidebar.open{left:0;}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:15;}
+    .sidebar-overlay.show{display:block;}
+    .mobile-topbar{display:flex;align-items:center;gap:10px;background:var(--navy);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:10;}
+    .hamburger{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
+    .role-chip{margin-left:auto;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:999px;font-size:12px;}
+    .main-content{padding:16px;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =========================================================================
+   XYNTRA — Prototipo de sistema de paquetería
+   Contiene únicamente la lógica base de: Roles, Login, Guías y Clientes,
+   sin las reglas de negocio específicas de otro proyecto (sin tarifas,
+   comisiones, zonas especiales, cálculo de agencia más cercana, etc.).
+   Empleados, Clientes y Guías se guardan en Firestore (proyecto
+   "xyntra-sv") y se sincronizan en vivo entre dispositivos.
+   ========================================================================= */
+
+function esc(s){
+  if(s === null || s === undefined) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function uid(prefix){ return prefix + Math.random().toString(36).slice(2,8).toUpperCase(); }
+function hoyCorto(){
+  const d = new Date();
+  return String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + String(d.getFullYear()).slice(-2);
+}
+function ahoraLargo(){
+  return new Date().toLocaleString("es-SV", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" });
+}
+
+/* ============ ROLES ============
+   4 roles fijos. Se asignan al crear un Empleado (Super Administrativo,
+   Administrativo, Piloto) o automáticamente al crear un Cliente. */
+const ROLES = [
+  { key:"Super Administrativo", icon:"🛠️", desc:"Acceso total: guías, clientes, empleados y roles." },
+  { key:"Administrativo", icon:"🗂️", desc:"Puede gestionar guías y clientes (sin gestionar empleados)." },
+  { key:"Cliente", icon:"🙍", desc:"Solo ve y crea las guías de su propia cuenta." },
+  { key:"Piloto", icon:"🛵", desc:"Solo ve las guías asignadas a él y puede actualizar su estado." },
+];
+
+const NAV_BY_ROLE = {
+  "Super Administrativo": ["dashboard","guias","crearguia","tarifas","clientes","empleados","roles","perfil"],
+  "Administrativo": ["dashboard","guias","crearguia","tarifas","clientes","perfil"],
+  "Cliente": ["misguias","crearguia","tarifas","perfil"],
+  "Piloto": ["misguias","perfil"],
+};
+const NAV_ITEMS = {
+  dashboard:{ label:"Dashboard", icon:"📊" },
+  guias:{ label:"Guías", icon:"📁" },
+  crearguia:{ label:"Crear Guía", icon:"➕" },
+  tarifas:{ label:"Precio de Envíos", icon:"💲" },
+  clientes:{ label:"Clientes", icon:"🧾" },
+  empleados:{ label:"Empleados", icon:"👷" },
+  roles:{ label:"Roles", icon:"🔑" },
+  misguias:{ label:"Mis Guías", icon:"📁" },
+  perfil:{ label:"Mi Perfil", icon:"👤" },
+};
+
+/* ============ DEPARTAMENTOS Y MUNICIPIOS DE EL SALVADOR (14 deptos / 262 municipios) ============ */
+const MUNICIPIOS_POR_DEPARTAMENTO = {
+  "Ahuachapán": ["Ahuachapán","Apaneca","Atiquizaya","Concepción de Ataco","El Refugio","Guaymango","Jujutla","San Francisco Menéndez","San Lorenzo","San Pedro Puxtla","Tacuba","Turín"],
+  "Santa Ana": ["Candelaria de la Frontera","Chalchuapa","Coatepeque","El Congo","El Porvenir","Masahuat","Metapán","San Antonio Pajonal","San Sebastián Salitrillo","Santa Ana","Santa Rosa Guachipilín","Santiago de la Frontera","Texistepeque"],
+  "Sonsonate": ["Acajutla","Armenia","Caluco","Cuisnahuat","Izalco","Juayúa","Nahuizalco","Nahulingo","Salcoatitán","San Antonio del Monte","San Julián","Santa Catarina Masahuat","Santa Isabel Ishuatán","Santo Domingo de Guzmán","Sonsonate","Sonzacate"],
+  "Chalatenango": ["Agua Caliente","Arcatao","Azacualpa","Chalatenango","Citalá","Comalapa","Concepción Quezaltepeque","Dulce Nombre de María","El Carrizal","El Paraíso","La Laguna","La Palma","La Reina","Las Vueltas","Nombre de Jesús","Nueva Concepción","Nueva Trinidad","Ojos de Agua","Potonico","San Antonio de la Cruz","San Antonio Los Ranchos","San Fernando","San Francisco Lempa","San Francisco Morazán","San Ignacio","San Isidro Labrador","San José Cancasque","San José Las Flores","San Luis del Carmen","San Miguel de Mercedes","San Rafael","Santa Rita","Tejutla"],
+  "Cuscatlán": ["Candelaria","Cojutepeque","El Carmen","El Rosario","Monte San Juan","Oratorio de Concepción","San Bartolomé Perulapía","San Cristóbal","San José Guayabal","San Pedro Perulapán","San Rafael Cedros","San Ramón","Santa Cruz Analquito","Santa Cruz Michapa","Suchitoto","Tenancingo"],
+  "San Salvador": ["Aguilares","Apopa","Ayutuxtepeque","Ciudad Delgado","Cuscatancingo","El Paisnal","Guazapa","Ilopango","Mejicanos","Nejapa","Panchimalco","Rosario de Mora","San Marcos","San Martín","San Salvador","Santiago Texacuangos","Santo Tomás","Soyapango","Tonacatepeque"],
+  "La Libertad": ["Antiguo Cuscatlán","Chiltiupán","Ciudad Arce","Colón","Comasagua","Huizúcar","Jayaque","Jicalapa","La Libertad","Nuevo Cuscatlán","Quezaltepeque","Sacacoyo","San José Villanueva","San Juan Opico","San Matías","San Pablo Tacachico","Santa Tecla","Talnique","Tamanique","Teotepeque","Tepecoyo","Zaragoza"],
+  "San Vicente": ["Apastepeque","Guadalupe","San Cayetano Istepeque","San Esteban Catarina","San Ildefonso","San Lorenzo","San Sebastián","San Vicente","Santa Clara","Santo Domingo","Tecoluca","Tepetitán","Verapaz"],
+  "Cabañas": ["Cinquera","Dolores","Guacotecti","Ilobasco","Jutiapa","San Isidro","Sensuntepeque","Tejutepeque","Victoria"],
+  "La Paz": ["Cuyultitán","El Rosario","Jerusalén","Mercedes La Ceiba","Olocuilta","Paraíso de Osorio","San Antonio Masahuat","San Emigdio","San Francisco Chinameca","San Juan Nonualco","San Juan Talpa","San Juan Tepezontes","San Luis La Herradura","San Luis Talpa","San Miguel Tepezontes","San Pedro Masahuat","San Pedro Nonualco","San Rafael Obrajuelo","Santa María Ostuma","Santiago Nonualco","Tapalhuaca","Zacatecoluca"],
+  "Usulután": ["Alegría","Berlín","California","Concepción Batres","El Triunfo","Ereguayquín","Estanzuelas","Jiquilisco","Jucuapa","Jucuarán","Mercedes Umaña","Nueva Granada","Ozatlán","Puerto El Triunfo","San Agustín","San Buenaventura","San Dionisio","San Francisco Javier","Santa Elena","Santa María","Santiago de María","Tecapán","Usulután"],
+  "San Miguel": ["Carolina","Chapeltique","Chinameca","Chirilagua","Ciudad Barrios","Comacarán","El Tránsito","Lolotique","Moncagua","Nueva Guadalupe","Nuevo Edén de San Juan","Quelepa","San Antonio del Mosco","San Gerardo","San Jorge","San Luis de la Reina","San Miguel","San Rafael Oriente","Sesori","Uluazapa"],
+  "Morazán": ["Arambala","Cacaopera","Chilanga","Corinto","Delicias de Concepción","El Divisadero","El Rosario","Gualococti","Guatajiagua","Joateca","Jocoaitique","Jocoro","Lolotiquillo","Meanguera","Osicala","Perquín","San Carlos","San Fernando","San Francisco Gotera","San Isidro","San Simón","Sensembra","Sociedad","Torola","Yamabal","Yoloaiquín"],
+  "La Unión": ["Anamorós","Bolívar","Concepción de Oriente","Conchagua","El Carmen","El Sauce","Intipucá","La Unión","Lislique","Meanguera del Golfo","Nueva Esparta","Pasaquina","Polorós","San Alejo","San José","Santa Rosa de Lima","Yayantique","Yucuaiquín"],
+};
+const DEPARTAMENTOS = Object.keys(MUNICIPIOS_POR_DEPARTAMENTO);
+
+/* ============ ESTADOS DE UNA GUÍA (flujo genérico, sin reglas extra) ============ */
+const ESTADOS = ["Creada","Recolectado","En bodega","Asignado a piloto","Entregado","Pendiente","Devolución","Finalizado"];
+const PILOTO_ESTADOS = ["Entregado","Pendiente","Devolución"];
+
+/* ============ DATOS BASE (semilla; se sube a Firestore solo la primera vez) ============ */
+let EMPLEADOS = [
+  { id:"E-001", nombre:"Ana Ríos", telefono:"7000-1111", correo:"admin@xyntra.com", password:"Xyntra2026", rol:"Super Administrativo" },
+  { id:"E-002", nombre:"Luis Gómez", telefono:"7000-2222", correo:"operaciones@xyntra.com", password:"Xyntra2026", rol:"Administrativo" },
+  { id:"E-003", nombre:"Carlos Peña", telefono:"7000-3333", correo:"piloto@xyntra.com", password:"Xyntra2026", rol:"Piloto" },
+];
+
+let CLIENTES = [
+  { id:"C-001", comercio:"Empresa ABC", telefono:"7000-4444", direccion:"Col. Escalón, Calle Principal #12", correo:"contacto@empresaabc.com", password:"ABC2026", fechaRegistro:"01/07/26, 09:00 a. m.", creadoPor:"Ana Ríos" },
+  { id:"C-002", comercio:"Tienda El Sol", telefono:"7000-5555", direccion:"Av. Independencia, Santa Ana", correo:"contacto@tiendaelsol.com", password:"ElSol2026", fechaRegistro:"05/07/26, 11:00 a. m.", creadoPor:"Ana Ríos" },
+];
+
+let GUIAS = [
+  { id:"YN100001", cliente:"Empresa ABC", estado:"Asignado a piloto", fecha:"17/07/26", piloto:"Carlos Peña", creadoPor:"Empresa ABC", creadoPorTipo:"Cliente" },
+  { id:"YN100002", cliente:"Tienda El Sol", estado:"En bodega", fecha:"18/07/26", piloto:"-", creadoPor:"Luis Gómez", creadoPorTipo:"Administrativo" },
+  { id:"YN100003", cliente:"Empresa ABC", estado:"Creada", fecha:"18/07/26", piloto:"-", creadoPor:"Empresa ABC", creadoPorTipo:"Cliente", historial:[{estado:"Creada", usuario:"Empresa ABC", rol:"Cliente", fecha:"18/07/26, 09:00 a. m."}] },
+];
+let TARIFAS = [
+  { id:"T-001", piezas:1, valor:3.50, tipoProducto:"General" },
+  { id:"T-002", piezas:2, valor:5.00, tipoProducto:"General" },
+  { id:"T-003", piezas:3, valor:6.50, tipoProducto:"General" },
+];
+
+function guardarTarifaEnFirestore(t){
+  if(typeof dbFirestore === "undefined" || !dbFirestore) return;
+  dbFirestore.collection("tarifas").doc(t.id).set(t).catch(err => console.error("Error guardando tarifa:", err));
+}
+function eliminarTarifaEnFirestore(id){
+  if(typeof dbFirestore === "undefined" || !dbFirestore) return;
+  dbFirestore.collection("tarifas").doc(id).delete().catch(err => console.error("Error eliminando tarifa:", err));
+}
+
+let nextGuiaNum = 100004;
+
+/* ============ SINCRONIZACIÓN CON FIRESTORE ============
+   Cada colección (empleados, clientes, guias) se sube como semilla la
+   primera vez que la base está vacía, y desde ahí queda escuchando
+   cambios en vivo (onSnapshot) para que cualquier dispositivo que abra
+   este mismo archivo vea siempre los mismos datos. *Listos pasa a true
+   en cuanto llega la primera respuesta (vacía o con datos); el login
+   espera a que ambas listas estén listas para no comparar contra datos
+   incompletos. */
+let empleadosListos = false;
+let clientesListos = false;
+let guiasListas = false;
+let tarifasListas = false;
+
+function guardarEmpleadoEnFirestore(e){
+  if(typeof dbFirestore === "undefined" || !dbFirestore) return;
+  dbFirestore.collection("empleados").doc(e.id).set(e).catch(err => console.error("Error guardando empleado:", err));
+}
+function guardarClienteEnFirestore(c){
+  if(typeof dbFirestore === "undefined" || !dbFirestore) return;
+  dbFirestore.collection("clientes").doc(c.id).set(c).catch(err => console.error("Error guardando cliente:", err));
+}
+function guardarGuiaEnFirestore(g){
+  if(typeof dbFirestore === "undefined" || !dbFirestore) return;
+  dbFirestore.collection("guias").doc(g.id).set(g).catch(err => console.error("Error guardando guía:", err));
+}
+
+function iniciarSincronizacionEmpleados(){
+  if(typeof dbFirestore === "undefined" || !dbFirestore){ empleadosListos = true; return; }
+  dbFirestore.collection("empleados").onSnapshot(snap => {
+    if(snap.empty && !empleadosListos){
+      EMPLEADOS.forEach(e => guardarEmpleadoEnFirestore(e));
+      empleadosListos = true;
+      return;
+    }
+    const lista = [];
+    snap.forEach(doc => lista.push(doc.data()));
+    EMPLEADOS.length = 0;
+    lista.forEach(e => EMPLEADOS.push(e));
+    empleadosListos = true;
+    if(state.role) render();
+  }, err => { console.error("Error sincronizando empleados:", err); empleadosListos = true; });
+}
+function iniciarSincronizacionClientes(){
+  if(typeof dbFirestore === "undefined" || !dbFirestore){ clientesListos = true; return; }
+  dbFirestore.collection("clientes").onSnapshot(snap => {
+    if(snap.empty && !clientesListos){
+      CLIENTES.forEach(c => guardarClienteEnFirestore(c));
+      clientesListos = true;
+      return;
+    }
+    const lista = [];
+    snap.forEach(doc => lista.push(doc.data()));
+    CLIENTES.length = 0;
+    lista.forEach(c => CLIENTES.push(c));
+    clientesListos = true;
+    if(state.role) render();
+  }, err => { console.error("Error sincronizando clientes:", err); clientesListos = true; });
+}
+function iniciarSincronizacionGuias(){
+  if(typeof dbFirestore === "undefined" || !dbFirestore){ guiasListas = true; return; }
+  dbFirestore.collection("guias").onSnapshot(snap => {
+    if(snap.empty && !guiasListas){
+      GUIAS.forEach(g => guardarGuiaEnFirestore(g));
+      guiasListas = true;
+      return;
+    }
+    const lista = [];
+    snap.forEach(doc => lista.push(doc.data()));
+    lista.sort((a,b) => (b.id||"").localeCompare(a.id||""));
+    GUIAS.length = 0;
+    lista.forEach(g => GUIAS.push(g));
+    guiasListas = true;
+    if(state.role) render();
+  }, err => { console.error("Error sincronizando guías:", err); guiasListas = true; });
+}
+
+function iniciarSincronizacionTarifas(){
+  if(typeof dbFirestore === "undefined" || !dbFirestore){ tarifasListas = true; return; }
+  dbFirestore.collection("tarifas").onSnapshot(snap => {
+    if(snap.empty && !tarifasListas){
+      TARIFAS.forEach(t => guardarTarifaEnFirestore(t));
+      tarifasListas = true;
+      return;
+    }
+    const lista = [];
+    snap.forEach(doc => lista.push(doc.data()));
+    lista.sort((a,b) => (a.piezas||0) - (b.piezas||0));
+    TARIFAS.length = 0;
+    lista.forEach(t => TARIFAS.push(t));
+    tarifasListas = true;
+    if(state.role) render();
+  }, err => { console.error("Error sincronizando tarifas:", err); tarifasListas = true; });
+}
+
+/* ============ ESTADO DE LA APP ============ */
+let state = {
+  role: null,
+  view: null,
+  sidebarAbierto: false,
+  loginCorreo: "",
+  loginClave: "",
+  loginError: "",
+  guiaFiltro: "",
+  clienteFiltro: "",
+  selectedGuiaId: null,
+  crearGuiaClienteSel: "",
+  crearGuiaNombre: "",
+  crearGuiaTelefono: "",
+  crearGuiaDireccion: "",
+  crearGuiaDepto: "",
+  crearGuiaMunicipio: "",
+  crearGuiaFragil: false,
+  crearGuiaPiezas: "1",
+  crearGuiaValor: "",
+  clienteEnEdicionId: null,
+  tarifaEnEdicionId: null,
+  tarifaPiezasForm: "",
+  tarifaValorForm: "",
+  tarifaTipoProductoForm: "",
+  empleadoNuevo: false,
+};
+
+let EMPLEADO_ACTUAL_ID = null;
+let CLIENTE_ACTUAL = null;
+
+function empleadoActual(){ return EMPLEADOS.find(e => e.id === EMPLEADO_ACTUAL_ID) || null; }
+function clienteActual(){ return CLIENTES.find(c => c.comercio === CLIENTE_ACTUAL) || null; }
+function nombreCortoUsuarioActual(){
+  if(state.role === "Cliente") return CLIENTE_ACTUAL || "Cliente";
+  const e = empleadoActual();
+  return e ? e.nombre : state.role;
+}
+
+/* ============ LOGIN ÚNICO (correo + contraseña) ============
+   Se valida contra EMPLEADOS (Super Administrativo, Administrativo, Piloto)
+   y contra CLIENTES (Cliente). El rol se determina automáticamente según
+   cuál registro coincide — el usuario nunca elige el rol a mano. */
+function onLoginCorreoInput(v){ state.loginCorreo = v; }
+function onLoginClaveInput(v){ state.loginClave = v; }
+
+function intentarLogin(){
+  const correo = (state.loginCorreo || "").trim().toLowerCase();
+  const clave = state.loginClave || "";
+  if(!correo || !clave){
+    state.loginError = "Escribe tu correo y contraseña.";
+    render();
+    return;
+  }
+  if(!empleadosListos || !clientesListos){
+    state.loginError = "Cargando datos, espera un momento e intenta de nuevo.";
+    render();
+    return;
+  }
+  const empleado = EMPLEADOS.find(e => (e.correo||"").toLowerCase() === correo && (e.password||"") === clave);
+  if(empleado){
+    EMPLEADO_ACTUAL_ID = empleado.id;
+    state.loginCorreo = ""; state.loginClave = ""; state.loginError = "";
+    selectRole(empleado.rol);
+    return;
+  }
+  const cliente = CLIENTES.find(c => (c.correo||"").toLowerCase() === correo && (c.password||"") === clave);
+  if(cliente){
+    CLIENTE_ACTUAL = cliente.comercio;
+    state.loginCorreo = ""; state.loginClave = ""; state.loginError = "";
+    selectRole("Cliente");
+    return;
+  }
+  state.loginError = "Correo o contraseña incorrectos.";
+  render();
+}
+
+function selectRole(role){
+  state.role = role;
+  state.view = NAV_BY_ROLE[role][0];
+  render();
+}
+function logout(){
+  state.role = null;
+  EMPLEADO_ACTUAL_ID = null;
+  CLIENTE_ACTUAL = null;
+  render();
+}
+function navigate(view){
+  state.view = view;
+  state.selectedGuiaId = null;
+  state.clienteEnEdicionId = null;
+  state.sidebarAbierto = false;
+  render();
+}
+function toggleSidebar(){ state.sidebarAbierto = !state.sidebarAbierto; render(); }
+function cerrarSidebar(){ state.sidebarAbierto = false; render(); }
+
+/* ============ PANTALLA: LOGIN ============ */
+function screenLogin(){
+  return `
+  <div class="login-screen">
+    <div class="login-box">
+      <div class="login-logo">Xyntra</div>
+      <div class="login-title">
+        <h1>Xyntra</h1>
+        <p>Ingresa tu correo y contraseña</p>
+      </div>
+      ${(!empleadosListos || !clientesListos) ? `<p style="text-align:center;color:rgba(255,255,255,.6);font-size:12px;margin:0 0 12px 0;">⏳ Conectando con la base de datos…</p>` : ""}
+      <div class="field">
+        <label>Correo</label>
+        <input type="email" autocapitalize="off" value="${esc(state.loginCorreo)}" oninput="onLoginCorreoInput(this.value)" onkeydown="if(event.key==='Enter'){document.getElementById('loginClaveInput').focus();}" />
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="loginClaveInput" value="${esc(state.loginClave)}" oninput="onLoginClaveInput(this.value)" onkeydown="if(event.key==='Enter'){intentarLogin();}" />
+      </div>
+      ${state.loginError ? `<p style="margin:0 0 10px 0;color:#fca5a5;font-size:13px;">${esc(state.loginError)}</p>` : ""}
+      <button class="btn btn-orange" style="width:100%;" onclick="intentarLogin()">Ingresar</button>
+      <p class="hint" style="color:rgba(255,255,255,.5);margin-top:18px;">
+        Demo — Super Admin: admin@xyntra.com / Xyntra2026 · Cliente: contacto@empresaabc.com / ABC2026
+      </p>
+    </div>
+  </div>`;
+}
+
+/* ============ NAV / LAYOUT ============ */
+function buildNavHtml(role){
+  return (NAV_BY_ROLE[role]||[]).map(key => {
+    const item = NAV_ITEMS[key];
+    const active = state.view === key ? "active" : "";
+    return `<button class="nav-btn ${active}" onclick="navigate('${key}')"><span>${item.icon}</span> ${item.label}</button>`;
+  }).join("");
+}
+
+function renderScreen(){
+  switch(state.view){
+    case "dashboard": return screenDashboard();
+    case "guias": return screenGuias();
+    case "misguias": return screenMisGuias();
+    case "crearguia": return screenCrearGuia();
+    case "tarifas": return screenTarifas();
+    case "clientes": return screenClientes();
+    case "empleados": return screenEmpleados();
+    case "roles": return screenRoles();
+    case "perfil": return screenPerfil();
+    default: return `<div class="card">Pantalla no encontrada.</div>`;
+  }
+}
+
+/* ============ DASHBOARD (Super Admin / Administrativo) ============ */
+function screenDashboard(){
+  const activas = GUIAS.filter(g => !["Finalizado"].includes(g.estado));
+  const finalizadas = GUIAS.filter(g => g.estado === "Finalizado");
+  return `
+  <div class="page-header"><div><h1>Dashboard</h1><p>Hoy es ${hoyCorto()} · Rol: <b>${state.role}</b></p></div></div>
+  <div class="grid2">
+    <div class="card"><div class="hint">Guías activas</div><h1 style="margin:6px 0;">${activas.length}</h1></div>
+    <div class="card"><div class="hint">Guías finalizadas</div><h1 style="margin:6px 0;">${finalizadas.length}</h1></div>
+  </div>
+  <div class="card"><div class="hint">Clientes registrados</div><h1 style="margin:6px 0;">${CLIENTES.length}</h1></div>
+  `;
+}
+
+/* ============ GUÍAS (roles administrativos) ============ */
+function usuarioActualParaHistorial(){
+  if(state.role === "Cliente") return { usuario: CLIENTE_ACTUAL || "Cliente", rol: "Cliente" };
+  const e = empleadoActual();
+  return { usuario: e ? e.nombre : "—", rol: state.role || "—" };
+}
+function registrarMovimientoGuia(g, descripcion){
+  const { usuario, rol } = usuarioActualParaHistorial();
+  if(!Array.isArray(g.historial)) g.historial = [];
+  g.historial.push({ estado: descripcion, usuario, rol, fecha: ahoraLargo() });
+}
+
+function guiasVisiblesParaRol(){
+  if(state.role === "Cliente") return GUIAS.filter(g => g.cliente === CLIENTE_ACTUAL);
+  if(state.role === "Piloto") return GUIAS.filter(g => g.piloto === (empleadoActual()||{}).nombre);
+  return GUIAS.slice();
+}
+function chipEstado(estado){
+  const map = { "Entregado":"chip-green","Finalizado":"chip-green","Devolución":"chip-red","Pendiente":"chip-amber" };
+  return `<span class="chip ${map[estado]||''}">${esc(estado)}</span>`;
+}
+function onGuiaFiltro(v){ state.guiaFiltro = v; render(); }
+
+function tablaGuias(lista){
+  const esAdmin = state.role === "Super Administrativo" || state.role === "Administrativo";
+  return `
+  <table>
+    <thead><tr><th># Guía</th><th>Cliente</th><th>Estado</th><th>Fecha</th><th>Piloto</th><th></th></tr></thead>
+    <tbody>
+      ${lista.map(g => `
+        <tr>
+          <td><b>${esc(g.id)}</b></td>
+          <td>${esc(g.cliente)}</td>
+          <td>${chipEstado(g.estado)}</td>
+          <td>${esc(g.fecha)}</td>
+          <td>${esc(g.piloto||"-")}</td>
+          <td><button class="btn-link" onclick="verGuia('${g.id}')">Ver / Editar</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="hint">No hay guías.</td></tr>`}
+    </tbody>
+  </table>`;
+}
+
+function screenGuias(){
+  const filtro = (state.guiaFiltro||"").toLowerCase();
+  let lista = guiasVisiblesParaRol();
+  if(filtro) lista = lista.filter(g => g.id.toLowerCase().includes(filtro) || g.cliente.toLowerCase().includes(filtro));
+  if(state.selectedGuiaId) return screenDetalleGuia(state.selectedGuiaId);
+  return `
+  <div class="page-header"><div><h1>Guías</h1><p>${lista.length} guía(s)</p></div>
+    <button class="btn btn-orange" onclick="navigate('crearguia')">➕ Crear guía</button>
+  </div>
+  <div class="card">
+    <input type="text" placeholder="Buscar por número de guía o cliente..." value="${esc(state.guiaFiltro)}" oninput="onGuiaFiltro(this.value)" style="margin-bottom:14px;" />
+    ${tablaGuias(lista)}
+  </div>`;
+}
+
+function screenMisGuias(){
+  const lista = guiasVisiblesParaRol();
+  const titulo = state.role === "Piloto" ? "Guías asignadas a mí" : "Mis Guías";
+  return `
+  <div class="page-header"><div><h1>${titulo}</h1><p>${lista.length} guía(s)</p></div>
+    ${state.role === "Cliente" ? `<button class="btn btn-orange" onclick="navigate('crearguia')">➕ Crear guía</button>` : ""}
+  </div>
+  <div class="card">${tablaGuias(lista)}</div>
+  ${state.selectedGuiaId ? screenDetalleGuia(state.selectedGuiaId) : ""}`;
+}
+
+function verGuia(id){ state.selectedGuiaId = id; render(); }
+function cerrarDetalleGuia(){ state.selectedGuiaId = null; render(); }
+
+function onCambioEstadoGuia(id, valor){
+  const g = GUIAS.find(x => x.id === id);
+  if(g){
+    g.estado = valor;
+    registrarMovimientoGuia(g, valor);
+    guardarGuiaEnFirestore(g);
+  }
+  render();
+}
+function onCambioPilotoGuia(id, valor){
+  const g = GUIAS.find(x => x.id === id);
+  if(g){
+    g.piloto = valor;
+    registrarMovimientoGuia(g, valor === "-" ? "Piloto sin asignar" : "Asignado a " + valor);
+    guardarGuiaEnFirestore(g);
+  }
+  render();
+}
+
+function screenDetalleGuia(id){
+  const g = GUIAS.find(x => x.id === id);
+  if(!g) return "";
+  const esAdmin = state.role === "Super Administrativo" || state.role === "Administrativo";
+  const esPiloto = state.role === "Piloto";
+  const pilotos = EMPLEADOS.filter(e => e.rol === "Piloto");
+  let estadoControl;
+  if(esAdmin){
+    estadoControl = `<select onchange="onCambioEstadoGuia('${g.id}', this.value)">
+      ${ESTADOS.map(e => `<option value="${e}" ${g.estado===e?'selected':''}>${e}</option>`).join("")}
+    </select>`;
+  } else if(esPiloto){
+    estadoControl = `<select onchange="onCambioEstadoGuia('${g.id}', this.value)">
+      ${PILOTO_ESTADOS.map(e => `<option value="${e}" ${g.estado===e?'selected':''}>${e}</option>`).join("")}
+    </select>`;
+  } else {
+    estadoControl = chipEstado(g.estado);
+  }
+  return `
+  <div class="card" style="margin-top:16px;">
+    <div class="page-header"><div><h1>Guía ${esc(g.id)}</h1><p>Cliente: ${esc(g.cliente)}</p></div>
+      <button class="btn-outline btn" onclick="cerrarDetalleGuia()">Cerrar</button>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Estado</label>${estadoControl}</div>
+      <div class="field"><label>Fecha</label><input value="${esc(g.fecha)}" disabled /></div>
+      ${esAdmin ? `
+      <div class="field"><label>Asignar piloto</label>
+        <select onchange="onCambioPilotoGuia('${g.id}', this.value)">
+          <option value="-" ${g.piloto==='-'?'selected':''}>Sin asignar</option>
+          ${pilotos.map(p => `<option value="${esc(p.nombre)}" ${g.piloto===p.nombre?'selected':''}>${esc(p.nombre)}</option>`).join("")}
+        </select>
+      </div>` : `<div class="field"><label>Piloto</label><input value="${esc(g.piloto||'-')}" disabled /></div>`}
+      <div class="field"><label>Creado por</label><input value="${esc(g.creadoPor)} (${esc(g.creadoPorTipo)})" disabled /></div>
+    </div>
+
+    <p class="hint" style="margin:14px 0 6px 0;font-weight:600;color:var(--navy);">Destinatario y paquete</p>
+    <div class="grid2">
+      <div class="field"><label>Nombre</label><input value="${esc(g.nombreDestinatario||'-')}" disabled /></div>
+      <div class="field"><label>Teléfono</label><input value="${esc(g.telefonoDestinatario||'-')}" disabled /></div>
+      <div class="field" style="grid-column:1/-1;"><label>Dirección</label><input value="${esc(g.direccion||'-')}" disabled /></div>
+      <div class="field"><label>Departamento</label><input value="${esc(g.departamento||'-')}" disabled /></div>
+      <div class="field"><label>Municipio</label><input value="${esc(g.municipio||'-')}" disabled /></div>
+      <div class="field"><label>Piezas</label><input value="${esc(g.piezas!==undefined?g.piezas:'-')}" disabled /></div>
+      <div class="field"><label>Valor del paquete</label><input value="${g.valor!==undefined ? '$'+Number(g.valor).toFixed(2) : '-'}" disabled /></div>
+      <div class="field"><label>¿Frágil?</label>${g.fragil ? `<span class="chip chip-red">Sí, frágil</span>` : `<span class="chip">No</span>`}</div>
+    </div>
+
+    <div style="text-align:center;margin-top:10px;">
+      <p class="hint" style="font-weight:600;color:var(--navy);margin-bottom:6px;">Código QR de la guía</p>
+      <img src="${urlQrGuia(g)}" alt="QR guía ${esc(g.id)}" width="160" height="160" style="border:1px solid var(--border);border-radius:8px;padding:6px;background:#fff;" />
+      <p class="hint" style="margin-top:6px;">Escanéalo para ver los datos de la guía</p>
+    </div>
+
+    <p class="hint" style="margin:18px 0 6px 0;font-weight:600;color:var(--navy);">Historial de movimientos</p>
+    <table>
+      <thead><tr><th>Movimiento</th><th>Hecho por</th><th>Fecha y hora</th></tr></thead>
+      <tbody>
+        ${(g.historial||[]).slice().reverse().map(h => `
+          <tr>
+            <td>${chipEstado(h.estado)}</td>
+            <td>${esc(h.usuario)} <span class="hint">(${esc(h.rol)})</span></td>
+            <td>${esc(h.fecha)}</td>
+          </tr>
+        `).join("") || `<tr><td colspan="3" class="hint">Sin movimientos registrados.</td></tr>`}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ============ CREAR GUÍA ============ */
+function onCrearGuiaClienteSel(v){ state.crearGuiaClienteSel = v; render(); }
+function onCrearGuiaCampo(campo, v){ state["crearGuia"+campo] = v; render(); }
+function onCrearGuiaDepto(v){ state.crearGuiaDepto = v; state.crearGuiaMunicipio = ""; render(); }
+function onCrearGuiaFragil(v){ state.crearGuiaFragil = v; render(); }
+
+function screenCrearGuia(){
+  const esAdmin = state.role === "Super Administrativo" || state.role === "Administrativo";
+  const municipios = state.crearGuiaDepto ? (MUNICIPIOS_POR_DEPARTAMENTO[state.crearGuiaDepto]||[]) : [];
+  return `
+  <div class="page-header"><div><h1>Crear Guía</h1><p>Registrar un nuevo envío</p></div></div>
+  <div class="card" style="max-width:520px;">
+    ${esAdmin ? `
+    <div class="field">
+      <label>Cliente</label>
+      <select onchange="onCrearGuiaClienteSel(this.value)">
+        <option value="">Selecciona un cliente…</option>
+        ${CLIENTES.map(c => `<option value="${esc(c.comercio)}" ${state.crearGuiaClienteSel===c.comercio?'selected':''}>${esc(c.comercio)}</option>`).join("")}
+      </select>
+    </div>` : `<p class="hint">Se creará a nombre de tu cuenta: <b>${esc(CLIENTE_ACTUAL)}</b></p>`}
+
+    <p class="hint" style="margin:14px 0 6px 0;font-weight:600;color:var(--navy);">Datos del destinatario</p>
+    <div class="field">
+      <label>Nombre</label>
+      <input type="text" placeholder="Nombre de quien recibe" value="${esc(state.crearGuiaNombre)}" oninput="onCrearGuiaCampo('Nombre', this.value)" />
+    </div>
+    <div class="field">
+      <label>Teléfono</label>
+      <input type="text" placeholder="0000-0000" value="${esc(state.crearGuiaTelefono)}" oninput="onCrearGuiaCampo('Telefono', this.value)" />
+    </div>
+    <div class="field">
+      <label>Dirección</label>
+      <textarea rows="2" placeholder="Dirección exacta de entrega" oninput="onCrearGuiaCampo('Direccion', this.value)">${esc(state.crearGuiaDireccion)}</textarea>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Departamento</label>
+        <select onchange="onCrearGuiaDepto(this.value)">
+          <option value="">Selecciona…</option>
+          ${DEPARTAMENTOS.map(d => `<option value="${esc(d)}" ${state.crearGuiaDepto===d?'selected':''}>${esc(d)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field">
+        <label>Municipio</label>
+        <select onchange="onCrearGuiaCampo('Municipio', this.value)" ${!state.crearGuiaDepto?'disabled':''}>
+          <option value="">${state.crearGuiaDepto ? 'Selecciona…' : 'Elige un departamento primero'}</option>
+          ${municipios.map(m => `<option value="${esc(m)}" ${state.crearGuiaMunicipio===m?'selected':''}>${esc(m)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+
+    <p class="hint" style="margin:14px 0 6px 0;font-weight:600;color:var(--navy);">Datos del paquete</p>
+    <div class="grid2">
+      <div class="field">
+        <label>¿Cuántas piezas?</label>
+        <input type="number" min="1" value="${esc(state.crearGuiaPiezas)}" oninput="onCrearGuiaCampo('Piezas', this.value)" />
+      </div>
+      <div class="field">
+        <label>Valor del paquete (US$)</label>
+        <input type="number" min="0" step="0.01" placeholder="0.00" value="${esc(state.crearGuiaValor)}" oninput="onCrearGuiaCampo('Valor', this.value)" />
+      </div>
+    </div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="fragilChk" style="width:auto;" ${state.crearGuiaFragil?'checked':''} onchange="onCrearGuiaFragil(this.checked)" />
+      <label for="fragilChk" style="margin:0;">¿Es frágil?</label>
+    </div>
+
+    <button class="btn btn-orange" style="width:100%;margin-top:8px;" onclick="confirmarCrearGuia()">Crear guía</button>
+  </div>`;
+}
+
+function confirmarCrearGuia(){
+  const esAdmin = state.role === "Super Administrativo" || state.role === "Administrativo";
+  const cliente = esAdmin ? state.crearGuiaClienteSel : CLIENTE_ACTUAL;
+  if(!cliente){ alert("Selecciona un cliente."); return; }
+  if(!state.crearGuiaNombre.trim()){ alert("Ingresa el nombre del destinatario."); return; }
+  if(!state.crearGuiaTelefono.trim()){ alert("Ingresa el teléfono del destinatario."); return; }
+  if(!state.crearGuiaDireccion.trim()){ alert("Ingresa la dirección de entrega."); return; }
+  if(!state.crearGuiaDepto){ alert("Selecciona el departamento."); return; }
+  if(!state.crearGuiaMunicipio){ alert("Selecciona el municipio."); return; }
+  if(!state.crearGuiaPiezas || Number(state.crearGuiaPiezas) < 1){ alert("Indica cuántas piezas son."); return; }
+  if(state.crearGuiaValor === "" || Number(state.crearGuiaValor) < 0){ alert("Indica el valor del paquete."); return; }
+
+  const { usuario, rol } = usuarioActualParaHistorial();
+  const nuevo = {
+    id: "YN" + (nextGuiaNum++),
+    cliente: cliente,
+    estado: "Creada",
+    fecha: hoyCorto(),
+    piloto: "-",
+    creadoPor: esAdmin ? nombreCortoUsuarioActual() : cliente,
+    creadoPorTipo: esAdmin ? state.role : "Cliente",
+    nombreDestinatario: state.crearGuiaNombre.trim(),
+    telefonoDestinatario: state.crearGuiaTelefono.trim(),
+    direccion: state.crearGuiaDireccion.trim(),
+    departamento: state.crearGuiaDepto,
+    municipio: state.crearGuiaMunicipio,
+    fragil: state.crearGuiaFragil,
+    piezas: Number(state.crearGuiaPiezas),
+    valor: Number(state.crearGuiaValor),
+    historial: [{ estado: "Creada", usuario, rol, fecha: ahoraLargo() }],
+  };
+  GUIAS.unshift(nuevo);
+  guardarGuiaEnFirestore(nuevo);
+  state.crearGuiaClienteSel = "";
+  state.crearGuiaNombre = "";
+  state.crearGuiaTelefono = "";
+  state.crearGuiaDireccion = "";
+  state.crearGuiaDepto = "";
+  state.crearGuiaMunicipio = "";
+  state.crearGuiaFragil = false;
+  state.crearGuiaPiezas = "1";
+  state.crearGuiaValor = "";
+  navigate(state.role === "Cliente" ? "misguias" : "guias");
+}
+
+/* ============ CÓDIGO QR DE LA GUÍA ============ */
+function textoQrGuia(g){
+  return [
+    "GUIA: " + g.id,
+    "Cliente: " + g.cliente,
+    "Destinatario: " + (g.nombreDestinatario||"-"),
+    "Tel: " + (g.telefonoDestinatario||"-"),
+    "Dir: " + (g.direccion||"-") + ", " + (g.municipio||"-") + ", " + (g.departamento||"-"),
+    "Piezas: " + (g.piezas||"-"),
+    "Valor: $" + (g.valor!==undefined ? Number(g.valor).toFixed(2) : "-"),
+    "Frágil: " + (g.fragil ? "SÍ" : "No"),
+  ].join(" | ");
+}
+function urlQrGuia(g){
+  return "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" + encodeURIComponent(textoQrGuia(g));
+}
+
+/* ============ PRECIO DE ENVÍOS (editable solo Super Administrativo) ============ */
+function onTarifaPiezasForm(v){ state.tarifaPiezasForm = v; }
+function onTarifaValorForm(v){ state.tarifaValorForm = v; }
+function onTarifaTipoProductoForm(v){ state.tarifaTipoProductoForm = v; }
+
+function guardarTarifaForm(){
+  const piezas = Number(state.tarifaPiezasForm);
+  const valor = Number(state.tarifaValorForm);
+  const tipoProducto = (state.tarifaTipoProductoForm||"").trim();
+  if(!piezas || piezas < 1){ alert("Indica cuántas piezas."); return; }
+  if(state.tarifaValorForm === "" || valor < 0){ alert("Indica el valor de envío."); return; }
+  if(!tipoProducto){ alert("Indica el tipo de producto."); return; }
+
+  if(state.tarifaEnEdicionId){
+    const t = TARIFAS.find(x => x.id === state.tarifaEnEdicionId);
+    if(t){ t.piezas = piezas; t.valor = valor; t.tipoProducto = tipoProducto; guardarTarifaEnFirestore(t); }
+  } else {
+    const existente = TARIFAS.find(x => Number(x.piezas) === piezas && (x.tipoProducto||"").toLowerCase() === tipoProducto.toLowerCase());
+    if(existente){ alert("Ya existe una tarifa para ese tipo de producto y esa cantidad de piezas. Edítala en vez de crear otra."); return; }
+    const nueva = { id: uid("T-"), piezas, valor, tipoProducto };
+    TARIFAS.push(nueva);
+    guardarTarifaEnFirestore(nueva);
+  }
+  TARIFAS.sort((a,b) => (a.piezas||0) - (b.piezas||0));
+  state.tarifaEnEdicionId = null;
+  state.tarifaPiezasForm = "";
+  state.tarifaValorForm = "";
+  state.tarifaTipoProductoForm = "";
+  render();
+}
+function editarTarifa(id){
+  const t = TARIFAS.find(x => x.id === id);
+  if(!t) return;
+  state.tarifaEnEdicionId = id;
+  state.tarifaPiezasForm = String(t.piezas);
+  state.tarifaValorForm = String(t.valor);
+  state.tarifaTipoProductoForm = t.tipoProducto || "";
+  render();
+}
+function cancelarEdicionTarifa(){
+  state.tarifaEnEdicionId = null;
+  state.tarifaPiezasForm = "";
+  state.tarifaValorForm = "";
+  state.tarifaTipoProductoForm = "";
+  render();
+}
+function borrarTarifa(id){
+  if(!confirm("¿Eliminar esta tarifa?")) return;
+  const i = TARIFAS.findIndex(x => x.id === id);
+  if(i > -1) TARIFAS.splice(i, 1);
+  eliminarTarifaEnFirestore(id);
+  if(state.tarifaEnEdicionId === id) cancelarEdicionTarifa();
+  render();
+}
+
+function screenTarifas(){
+  const esSuperAdmin = state.role === "Super Administrativo";
+  const lista = TARIFAS.slice().sort((a,b) => (a.piezas||0) - (b.piezas||0));
+  return `
+  <div class="page-header"><div><h1>Precio de Envíos</h1><p>${esSuperAdmin ? "Escribe y actualiza el precio según la cantidad de piezas" : "Consulta el precio de envío según la cantidad de piezas"}</p></div></div>
+
+  ${esSuperAdmin ? `
+  <div class="card" style="max-width:480px;">
+    <p class="hint" style="font-weight:600;color:var(--navy);margin:0 0 10px 0;">${state.tarifaEnEdicionId ? "Editar tarifa" : "Agregar nueva tarifa"}</p>
+    <div class="field">
+      <label>Tipo de producto</label>
+      <input type="text" placeholder="Ej. Documentos, Ropa, Electrónica…" value="${esc(state.tarifaTipoProductoForm)}" oninput="onTarifaTipoProductoForm(this.value)" />
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Cantidad de piezas</label>
+        <input type="number" min="1" placeholder="Ej. 1" value="${esc(state.tarifaPiezasForm)}" oninput="onTarifaPiezasForm(this.value)" />
+      </div>
+      <div class="field">
+        <label>Valor de envío (US$)</label>
+        <input type="number" min="0" step="0.01" placeholder="0.00" value="${esc(state.tarifaValorForm)}" oninput="onTarifaValorForm(this.value)" />
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-orange" style="flex:1;" onclick="guardarTarifaForm()">${state.tarifaEnEdicionId ? "Guardar cambios" : "Agregar tarifa"}</button>
+      ${state.tarifaEnEdicionId ? `<button class="btn btn-outline" onclick="cancelarEdicionTarifa()">Cancelar</button>` : ""}
+    </div>
+  </div>` : ""}
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Tipo de producto</th><th>Piezas</th><th>Valor de envío</th>${esSuperAdmin ? "<th></th>" : ""}</tr></thead>
+      <tbody>
+        ${lista.map(t => `
+          <tr>
+            <td>${esc(t.tipoProducto || "General")}</td>
+            <td><b>${esc(t.piezas)}</b> pieza(s)</td>
+            <td>$${Number(t.valor).toFixed(2)}</td>
+            ${esSuperAdmin ? `
+            <td>
+              <button class="btn-link" onclick="editarTarifa('${t.id}')">Editar</button>
+              &nbsp;·&nbsp;
+              <button class="btn-link" style="color:var(--red);" onclick="borrarTarifa('${t.id}')">Eliminar</button>
+            </td>` : ""}
+          </tr>
+        `).join("") || `<tr><td colspan="${esSuperAdmin?4:3}" class="hint">Aún no hay tarifas registradas.</td></tr>`}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ============ CLIENTES (roles administrativos) ============ */
+function onClienteFiltro(v){ state.clienteFiltro = v; render(); }
+function screenClientes(){
+  const filtro = (state.clienteFiltro||"").toLowerCase();
+  let lista = CLIENTES.slice();
+  if(filtro) lista = lista.filter(c => c.comercio.toLowerCase().includes(filtro) || (c.correo||"").toLowerCase().includes(filtro));
+  return `
+  <div class="page-header"><div><h1>Clientes</h1><p>${lista.length} cliente(s)</p></div>
+    <button class="btn btn-orange" onclick="abrirNuevoCliente()">➕ Nuevo cliente</button>
+  </div>
+  <div class="card">
+    <input type="text" placeholder="Buscar por comercio o correo..." value="${esc(state.clienteFiltro)}" oninput="onClienteFiltro(this.value)" style="margin-bottom:14px;" />
+    <table>
+      <thead><tr><th>Comercio</th><th>Teléfono</th><th>Correo</th><th>Registrado</th><th></th></tr></thead>
+      <tbody>
+        ${lista.map(c => `
+          <tr>
+            <td><b>${esc(c.comercio)}</b></td>
+            <td>${esc(c.telefono)}</td>
+            <td>${esc(c.correo)}</td>
+            <td>${esc(c.fechaRegistro)}</td>
+            <td><button class="btn-link" onclick="editarCliente('${c.id}')">Editar</button></td>
+          </tr>
+        `).join("") || `<tr><td colspan="5" class="hint">No hay clientes.</td></tr>`}
+      </tbody>
+    </table>
+  </div>
+  ${state.clienteEnEdicionId !== null ? screenFormCliente() : ""}`;
+}
+function abrirNuevoCliente(){ state.clienteEnEdicionId = "nuevo"; render(); }
+function editarCliente(id){ state.clienteEnEdicionId = id; render(); }
+function cerrarFormCliente(){ state.clienteEnEdicionId = null; render(); }
+
+function screenFormCliente(){
+  const esNuevo = state.clienteEnEdicionId === "nuevo";
+  const c = esNuevo ? { comercio:"", telefono:"", direccion:"", correo:"", password:"" } : CLIENTES.find(x => x.id === state.clienteEnEdicionId);
+  if(!c) return "";
+  return `
+  <div class="card" style="max-width:480px;">
+    <h1 style="font-size:18px;margin:0 0 14px 0;">${esNuevo ? "Nuevo cliente" : "Editar cliente"}</h1>
+    <div class="field"><label>Comercio</label><input id="cf_comercio" value="${esc(c.comercio)}" /></div>
+    <div class="field"><label>Teléfono</label><input id="cf_telefono" value="${esc(c.telefono)}" /></div>
+    <div class="field"><label>Dirección</label><input id="cf_direccion" value="${esc(c.direccion||'')}" /></div>
+    <div class="field"><label>Correo</label><input id="cf_correo" value="${esc(c.correo)}" /></div>
+    <div class="field"><label>Contraseña</label><input id="cf_password" value="${esc(c.password)}" /></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-orange" onclick="guardarCliente()">Guardar</button>
+      <button class="btn btn-outline" onclick="cerrarFormCliente()">Cancelar</button>
+    </div>
+  </div>`;
+}
+function guardarCliente(){
+  const comercio = document.getElementById("cf_comercio").value.trim();
+  const telefono = document.getElementById("cf_telefono").value.trim();
+  const direccion = document.getElementById("cf_direccion").value.trim();
+  const correo = document.getElementById("cf_correo").value.trim();
+  const password = document.getElementById("cf_password").value.trim();
+  if(!comercio || !correo || !password){ alert("Comercio, correo y contraseña son obligatorios."); return; }
+  if(state.clienteEnEdicionId === "nuevo"){
+    const nuevo = { id: uid("C-"), comercio, telefono, direccion, correo, password, fechaRegistro: ahoraLargo(), creadoPor: nombreCortoUsuarioActual() };
+    CLIENTES.push(nuevo);
+    guardarClienteEnFirestore(nuevo);
+  } else {
+    const c = CLIENTES.find(x => x.id === state.clienteEnEdicionId);
+    if(c){ c.comercio=comercio; c.telefono=telefono; c.direccion=direccion; c.correo=correo; c.password=password; guardarClienteEnFirestore(c); }
+  }
+  state.clienteEnEdicionId = null;
+  render();
+}
+
+/* ============ EMPLEADOS (solo Super Administrativo) — necesarios para asignar Roles ============ */
+function screenEmpleados(){
+  if(state.role !== "Super Administrativo") return `<div class="card">No tienes acceso a esta sección.</div>`;
+  return `
+  <div class="page-header"><div><h1>Empleados</h1><p>Usuarios internos y asignación de roles</p></div>
+    <button class="btn btn-orange" onclick="state.empleadoNuevo=true;render();">➕ Nuevo empleado</button>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Rol</th></tr></thead>
+      <tbody>
+        ${EMPLEADOS.map(e => `
+          <tr><td><b>${esc(e.nombre)}</b></td><td>${esc(e.telefono)}</td><td>${esc(e.correo)}</td><td><span class="chip">${esc(e.rol)}</span></td></tr>
+        `).join("")}
+      </tbody>
+    </table>
+  </div>
+  ${state.empleadoNuevo ? `
+  <div class="card" style="max-width:480px;">
+    <h1 style="font-size:18px;margin:0 0 14px 0;">Nuevo empleado</h1>
+    <div class="field"><label>Nombre</label><input id="ef_nombre" /></div>
+    <div class="field"><label>Teléfono</label><input id="ef_telefono" /></div>
+    <div class="field"><label>Correo</label><input id="ef_correo" /></div>
+    <div class="field"><label>Contraseña</label><input id="ef_password" /></div>
+    <div class="field"><label>Rol</label>
+      <select id="ef_rol">
+        <option>Administrativo</option>
+        <option>Piloto</option>
+        <option>Super Administrativo</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-orange" onclick="guardarEmpleado()">Guardar</button>
+      <button class="btn btn-outline" onclick="state.empleadoNuevo=false;render();">Cancelar</button>
+    </div>
+  </div>` : ""}`;
+}
+function guardarEmpleado(){
+  const nombre = document.getElementById("ef_nombre").value.trim();
+  const telefono = document.getElementById("ef_telefono").value.trim();
+  const correo = document.getElementById("ef_correo").value.trim();
+  const password = document.getElementById("ef_password").value.trim();
+  const rol = document.getElementById("ef_rol").value;
+  if(!nombre || !correo || !password){ alert("Nombre, correo y contraseña son obligatorios."); return; }
+  const nuevo = { id: uid("E-"), nombre, telefono, correo, password, rol };
+  EMPLEADOS.push(nuevo);
+  guardarEmpleadoEnFirestore(nuevo);
+  state.empleadoNuevo = false;
+  render();
+}
+
+/* ============ ROLES (solo lectura) ============ */
+function screenRoles(){
+  return `
+  <div class="page-header"><div><h1>Roles</h1><p>Los roles se asignan al crear un usuario en Empleados o Clientes</p></div></div>
+  <div class="card">
+    ${ROLES.map(r => `
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:22px;">${r.icon}</div>
+        <div><b>${esc(r.key)}</b><div class="hint">${esc(r.desc)}</div></div>
+      </div>
+    `).join("")}
+  </div>`;
+}
+
+/* ============ PERFIL ============ */
+function screenPerfil(){
+  if(state.role === "Cliente"){
+    const c = clienteActual();
+    return `
+    <div class="page-header"><div><h1>Mi Perfil</h1></div></div>
+    <div class="card" style="max-width:480px;">
+      <div class="field"><label>Comercio</label><input value="${esc(c.comercio)}" disabled /></div>
+      <div class="field"><label>Teléfono</label><input value="${esc(c.telefono)}" disabled /></div>
+      <div class="field"><label>Correo</label><input value="${esc(c.correo)}" disabled /></div>
+    </div>`;
+  }
+  const e = empleadoActual();
+  return `
+  <div class="page-header"><div><h1>Mi Perfil</h1></div></div>
+  <div class="card" style="max-width:480px;">
+    <div class="field"><label>Nombre</label><input value="${esc(e.nombre)}" disabled /></div>
+    <div class="field"><label>Teléfono</label><input value="${esc(e.telefono)}" disabled /></div>
+    <div class="field"><label>Correo</label><input value="${esc(e.correo)}" disabled /></div>
+    <div class="field"><label>Rol</label><input value="${esc(e.rol)}" disabled /></div>
+  </div>`;
+}
+
+/* ============ RENDER PRINCIPAL ============ */
+function render(){
+  const app = document.getElementById("app");
+  if(!state.role){
+    app.innerHTML = screenLogin();
+    return;
+  }
+  app.innerHTML = `
+    <div class="sidebar-overlay ${state.sidebarAbierto ? 'show':''}" onclick="cerrarSidebar()"></div>
+    <div class="sidebar ${state.sidebarAbierto ? 'open':''}">
+      <div class="sidebar-logo"><span class="box">Xyntra</span></div>
+      <div class="session-box"><small>Sesión activa</small><strong>${esc(nombreCortoUsuarioActual())} · ${esc(state.role)}</strong></div>
+      <div class="nav">${buildNavHtml(state.role)}</div>
+      <button class="logout-btn" onclick="logout()"><span>↩</span> Cerrar sesión</button>
+    </div>
+    <main>
+      <div class="mobile-topbar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <b>Xyntra</b>
+        <span class="role-chip">${esc(nombreCortoUsuarioActual())}</span>
+      </div>
+      <div class="main-content">${renderScreen()}</div>
+    </main>
+  `;
+}
+
+iniciarSincronizacionEmpleados();
+iniciarSincronizacionClientes();
+iniciarSincronizacionGuias();
+iniciarSincronizacionTarifas();
+render();
+</script>
+</body>
+</html>
